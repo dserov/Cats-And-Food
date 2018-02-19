@@ -1,3 +1,5 @@
+import java.awt.*;
+
 /**
  * Cat
  *
@@ -6,7 +8,7 @@
  * @link https://github.com/dserov/CatsAndFood
  */
 
-public class Cat {
+public class Cat extends Entity {
     private String name; // котоимя
     private int appetite; // сколько кот ест за раз. (2-5)
     private int hungry; // уровень голода кота. как только обнулится - кот не голоден (5-25)
@@ -41,5 +43,15 @@ public class Cat {
      */
     boolean isHangry() {
         return hungry > 0;
+    }
+
+    @Override
+    public void update(long timeDelay) {
+
+    }
+
+    @Override
+    public void render(Graphics g) {
+
     }
 }
