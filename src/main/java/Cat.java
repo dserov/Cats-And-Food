@@ -12,9 +12,12 @@ public class Cat extends Entity {
     private String name; // котоимя
     private int appetite; // сколько кот ест за раз. (2-5)
     private int hungry; // уровень голода кота. как только обнулится - кот не голоден (5-25)
+    private boolean busy; // кот занят обычно анимацией
 
     Cat(String name) {
         this.name = name;
+        width = 70;
+        height = 70;
         reinit();
     }
 
@@ -26,7 +29,7 @@ public class Cat extends Entity {
 
     @Override
     public String toString() {
-        return this.getClass().getName() + " { name=" + name + ", appetite=" + appetite + ", isHungry= " + isHangry() + " }";
+        return this.getClass().getName() + " { name=" + name + ", appetite=" + appetite + ", isHungry= " + isHungry() + " }";
     }
 
     /**
@@ -41,7 +44,7 @@ public class Cat extends Entity {
      * кот голоден?
      * @return true голоден
      */
-    boolean isHangry() {
+    boolean isHungry() {
         return hungry > 0;
     }
 
@@ -52,6 +55,11 @@ public class Cat extends Entity {
 
     @Override
     public void render(Graphics g) {
+        g.setColor(Color.BLUE);
+        g.fillRect((int) getX(), (int) getY(), (int) getWidth(), (int) getHeight());
+    }
 
+    public boolean isBusy() {
+        return busy;
     }
 }

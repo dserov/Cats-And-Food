@@ -1,6 +1,5 @@
-import sun.java2d.pipe.BufferedOpCodes;
-
 import java.awt.*;
+
 
 /**
  * Plate
@@ -13,34 +12,74 @@ import java.awt.*;
 public class Plate extends Entity {
     private int food; // объем тарелки. от 50 до 100
 
+    // тарелка должна знать, куда она едет
+    private double xDest, yDest;
+
+    // если тарелка куда-то движется - она занята, как приедет - свободна для общения
+    private boolean busy = false;
+
+    // установка цели для тарелки
+    public void moveTo(int xDest, int yDest) {
+        this.xDest = xDest;
+        this.yDest = yDest;
+        busy = true;
+    }
+
+    public boolean isBusy() {
+        return busy;
+    }
+
     Plate() {
         super();
         reinit();
-        // set size
-        x = 0;
-        y = 0;
-        width = 70;
-        height = 30;
 
         // скорость перемещения в пикселях в секунду
-        dx = 50;
-        dy = 50;
+//        dx = 50;
+//        dy = 50;
     }
 
     @Override
     public void update(long timeDelay) {
+        if (!busy) {
+            // тарелка никуда не едет
+            return;
+        }
+
+        // проверка, что не у цели еще
+        double x1 = x - xDest;
+        double y1 = y - yDest;
+        int distance = (int) Math.sqrt(x1 * x1 + y1 * y1);
+        if (distance == 0) {
+            // с прибытием
+            busy = false;
+            dx = 0;
+            dy = 0;
+            x = xDest;
+            y = yDest;
+            return;
+        }
+
+        if (dx == 0 && dy == 0) {
+            // расчет направления движения и скорости
+            dx = (x < xDest) ? (xDest - x) : (x - xDest);
+            dy = (y > yDest) ? (yDest - y) : (y - yDest);
+        }
+
         x += (dx * timeDelay) / 1000;
         y += (dy * timeDelay) / 1000;
     }
 
     @Override
     public void render(Graphics g) {
-        g.setColor(Color.blue);
+        g.setColor(Color.cyan);
         g.fillOval((int) x, (int) y, (int) width, (int) height);
     }
 
     public void reinit() {
         food = (int) (50 + Math.random() * 50);
+
+        width = 70;
+        height = 30;
     }
 
     /**
@@ -80,5 +119,12 @@ public class Plate extends Entity {
      */
     boolean isPlateEmpty() {
         return food == 0;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getName() + "[x=" + x + ",y=" + y + ",width=" + width + ",height=" + height +
+                ",dx=" + dx + ",dy=" + dy + ",xDest=" + xDest + ",yDest=" + yDest + "]";
+
     }
 }

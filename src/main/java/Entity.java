@@ -9,14 +9,19 @@ import java.awt.geom.Rectangle2D;
  * @link https://github.com/dserov/CatsAndFood
  */
 public abstract class Entity extends Rectangle2D.Double {
-    protected float dx; // by horizontal move
-    protected float dy; // by vertical move
+    double dx; // by horizontal move
+    double dy; // by vertical move
 //    Image sprite;
 
-    public Entity() {
+    Entity() {
         super();
     }
 
     abstract public void update(long timeDelay);
     abstract public void render(Graphics g);
+
+    public void setLocation(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
 }

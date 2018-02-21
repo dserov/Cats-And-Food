@@ -22,6 +22,57 @@ public class GameField extends JPanel implements Runnable {
     private Cat[] cats = new Cat[CATS_COUNT];
     private Plate plate;
 
+    private Cat catCurrent;
+    private int catNum = -1;
+
+    enum Stage {
+        MOVE_PLATE,
+        CAT_EATING,
+        SELECT_NEXT_CAT,
+        IDLE
+    }
+
+    private Stage stage;
+
+    // служит для пересчета состояния сущностей приложения
+    private void update(long timeDelay) {
+        System.out.println("Current stage = " + stage);
+        // select new stage
+
+        switch (stage) {
+            case IDLE:
+                if (catCurrent == null)
+                    stage = Stage.SELECT_NEXT_CAT;
+                else {
+                    if (!plate.isBusy() && !catCurrent.isBusy() && !plate.isPlateEmpty())
+                        stage = Stage.SELECT_NEXT_CAT;
+                }
+                break;
+            case SELECT_NEXT_CAT:
+                catNum++;
+                if (catNum >= cats.length) catNum = 0;
+                catCurrent = cats[catNum];
+                // к нему поехала тарелочка
+                plate.moveTo((int) catCurrent.getX(), (int) catCurrent.getMaxY());
+                stage = Stage.MOVE_PLATE;
+                break;
+            case MOVE_PLATE:
+                System.out.println(plate);
+                if (!plate.isBusy()) {
+                    catCurrent.eat(plate);
+                    stage = Stage.CAT_EATING; // пока не доедет, не переключаем
+                }
+                break;
+            case CAT_EATING:
+                if (!catCurrent.isBusy())
+                    stage = Stage.IDLE;
+                break;
+        }
+
+        for (Entity entity : entities)
+            entity.update(timeDelay);
+    }
+
     GameField() {
         setBackground(Color.BLACK);
         setPreferredSize(new Dimension(W_WIDTH, W_HEIGHT));
@@ -29,6 +80,7 @@ public class GameField extends JPanel implements Runnable {
 
 //        loadImage();
         init();
+        stage = Stage.IDLE;
     }
 
     // вызывается при добавлении панельки к фрейму
@@ -46,15 +98,10 @@ public class GameField extends JPanel implements Runnable {
         super.paintComponent(g);
 
         // рисуем все сущности
-        for (Entity entity: entities)
+        for (Entity entity : entities)
             entity.render(g);
     }
 
-    // служит для пересчета состояния сущностей приложения
-    private void update(long timeDelay) {
-        for (Entity entity: entities)
-            entity.update(timeDelay);
-    }
 
     // тело потока
     @Override
@@ -76,7 +123,6 @@ public class GameField extends JPanel implements Runnable {
             fps++;
             frameTime += sleepTime;
             if (frameTime > 1000) {
-//                System.out.println("fps: " + fps);
                 fps = 0;
                 frameTime = 0;
             }
@@ -98,7 +144,7 @@ public class GameField extends JPanel implements Runnable {
             allCatsNotHungry = true;
             for (Cat cat : cats) {
                 cat.eat(plate); // кот лизнул из тарелки
-                allCatsNotHungry &= !cat.isHangry(); // если хоть один кот голоден, скинется в false
+                allCatsNotHungry &= !cat.isHungry(); // если хоть один кот голоден, скинется в false
             }
             if (allCatsNotHungry || plate.isPlateEmpty())
                 break; // накормлены все, либо тарелка пуста
@@ -116,8 +162,11 @@ public class GameField extends JPanel implements Runnable {
         for (int i = 0; i < CATS_COUNT; i++) {
             cats[i] = new Cat("Kot-" + i);
             entities.add(cats[i]);
+
+            cats[i].setLocation(100 * i + 30, 10);
         }
         plate = new Plate();
+        plate.setLocation(0, 150);
         entities.add(plate);
     }
 }
