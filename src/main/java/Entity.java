@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 
+
 /**
  * Графическая составляющая объектов
  *
@@ -11,11 +12,6 @@ import java.awt.geom.Rectangle2D;
 public abstract class Entity extends Rectangle2D.Double {
     double dx; // by horizontal move
     double dy; // by vertical move
-//    Image sprite;
-
-    Entity() {
-        super();
-    }
 
     abstract public void update(long timeDelay);
     abstract public void render(Graphics g);
