@@ -1,6 +1,4 @@
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
-
 
 /**
  * Графическая составляющая объектов
@@ -9,15 +7,34 @@ import java.awt.geom.Rectangle2D;
  * @version dated 17 feb, 2018
  * @link https://github.com/dserov/CatsAndFood
  */
-public abstract class Entity extends Rectangle2D.Double {
+public abstract class Entity {
     double dx; // by horizontal move
     double dy; // by vertical move
+    double x, y, width, height;
+
 
     abstract public void update(long timeDelay);
+
     abstract public void render(Graphics g);
 
     public void setLocation(double x, double y) {
         this.x = x;
         this.y = y;
+    }
+
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public double getHeight() {
+        return height;
+    }
+
+    public double getCenterY() {
+        return (y + height) / 2.0;
     }
 }

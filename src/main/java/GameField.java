@@ -1,8 +1,5 @@
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Cats And Food
@@ -12,11 +9,11 @@ import java.util.List;
  * @link https://github.com/dserov/CatsAndFood
  */
 public class GameField extends JPanel implements Runnable {
-    private final int W_HEIGHT = 600;
-    private final int W_WIDTH = 800;
+    private final int W_HEIGHT = 550;
+    private final int W_WIDTH = 600;
     private final long DELAY = 20; // умолчательное значение задержки следующего рабочего цикла
     private Thread runner;
-    private List<Entity> entities = new ArrayList<>();
+//    private List<Entity> entities = new ArrayList<>();
 
     final private int CATS_COUNT = 3;
     private Cat[] cats = new Cat[CATS_COUNT];
@@ -24,21 +21,21 @@ public class GameField extends JPanel implements Runnable {
 
     private Cat catCurrent;
     private int catNum = -1;
-    boolean allCatsNotHungry = true; // признак, что все коты накормлены
+    private boolean allCatsNotHungry = true; // признак, что все коты накормлены
 
     enum Stage {
         MOVE_PLATE,
         CAT_EATING,
         SELECT_NEXT_CAT,
         PLATE_IS_EMPTY,
-        IDLE
+        IDLE,
     }
 
     private Stage stage;
 
     // служит для пересчета состояния сущностей приложения
     private void update(long timeDelay) {
-        System.out.println("Current stage = " + stage);
+        //System.out.println("Current stage = " + stage);
         // select new stage
 
         switch (stage) {
@@ -58,7 +55,7 @@ public class GameField extends JPanel implements Runnable {
                     plate.moveTo(300, 150);
                 } else {
                     // к нему поехала тарелочка
-                    plate.moveTo((int) catCurrent.getX() + 50, (int) catCurrent.getCenterY());
+                    plate.moveTo((int) catCurrent.getX() + 60, (int) catCurrent.getY() + 75);
                 }
                 stage = Stage.MOVE_PLATE;
                 break;
@@ -83,7 +80,9 @@ public class GameField extends JPanel implements Runnable {
                 break;
         }
 
-        for (Entity entity : entities)
+        // обновим состояние всех сущностей
+        plate.update(timeDelay);
+        for (Entity entity : cats)
             entity.update(timeDelay);
     }
 
@@ -107,6 +106,7 @@ public class GameField extends JPanel implements Runnable {
 
         init();
         stage = Stage.IDLE;
+//        stage = Stage.TEST_STAGE;
     }
 
     // вызывается при добавлении панельки к фрейму
@@ -124,7 +124,8 @@ public class GameField extends JPanel implements Runnable {
         super.paintComponent(g);
 
         // рисуем все сущности
-        for (Entity entity : entities)
+        plate.render(g);
+        for (Entity entity : cats)
             entity.render(g);
     }
 
@@ -160,24 +161,6 @@ public class GameField extends JPanel implements Runnable {
             }
             lastFrameTime = System.currentTimeMillis();
         }
-
-
-        // инфа о тарелке
-        plate.info();
-        // кормим котов, пока тарелка не опустеет или все не накормятся
-        while (true) {
-            allCatsNotHungry = true;
-            for (Cat cat : cats) {
-                cat.eat(plate); // кот лизнул из тарелки
-                allCatsNotHungry &= !cat.isHungry(); // если хоть один кот голоден, скинется в false
-            }
-            if (allCatsNotHungry || plate.isPlateEmpty())
-                break; // накормлены все, либо тарелка пуста
-        }
-        // вывод инфы
-        for (Cat cat : cats)
-            System.out.println(cat); // статус кота
-        plate.info(); // статус тарелки
     }
 
     // создаем объекты приложения
@@ -185,13 +168,14 @@ public class GameField extends JPanel implements Runnable {
         // создаем тарелку
         plate = new Plate();
         plate.setLocation(300, 150);
-        entities.add(plate);
+//        entities.add(plate);
 
         // Создаем котов с разным аппетитом от 5 до 25
         for (int i = 0; i < CATS_COUNT; i++) {
             Cat cat = new Cat("Kot-" + i);
-            entities.add(cat);
-            cat.setLocation(10, cats[i].getHeight() * i + 30);
+            cat.setLocation(10, (cat.getHeight() + 20) * i + 20);
+//            entities.add(cat);
+            cats[i] = cat;
         }
     }
 }

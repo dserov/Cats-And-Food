@@ -25,13 +25,10 @@ public class Plate extends Entity {
     private boolean busy = false;
 
     private final static String SPRITEFILENAME = "images/tarelka%d.png";
-    static ArrayList<Image> sprites = new ArrayList<>();
-    int frameCurrent = -1; // текущий фрейм
-    long lastFrameTime; // время последней смены кадра
-    long interFrametime = 100; // время между кадрами ms
-
-
-
+    private static ArrayList<Image> sprites = new ArrayList<>();
+    private int frameCurrent = -1; // текущий фрейм
+    private long lastFrameTime; // время последней смены кадра
+    private long interFrametime = 100; // время между кадрами ms
 
     // установка цели для тарелки
     public void moveTo(int xDest, int yDest) {
@@ -45,16 +42,16 @@ public class Plate extends Entity {
     }
 
     Plate() {
-        width = 70;
-        height = 30;
-
-        if (sprites.size() == 0)
-            loadImages();
-
+        loadImages();
         if (sprites.size() > 0) {
+            frameCurrent = 0;
             width = sprites.get(0).getWidth(null);
             height = sprites.get(0).getHeight(null);
+        } else {
+            width = 70;
+            height = 30;
         }
+
         reinit();
     }
 
@@ -105,19 +102,16 @@ public class Plate extends Entity {
         if (frameCurrent >= 0 && frameCurrent < sprites.size())
             g.drawImage(sprites.get(frameCurrent), (int) x, (int) y, null);
 
-//        g.setColor(Color.cyan);
-//        g.fillOval((int) x, (int) y, (int) width, (int) height);
-//
 //         прогрессбар
-        g.fillRect((int) getX(), (int)getMaxY() + 2, (int) getWidth(), 4);
+        g.fillRect((int) x, (int) (y + height) + 2, (int) width, 5);
         g.setColor(Color.PINK);
-        g.fillRect((int) (getX() + capacity * coeff), (int)getMaxY() + 2,
-                (int) ((initialCapacity - capacity) * coeff) + 1, 4);
+        g.fillRect((int) (x + capacity * coeff), (int) (y + height) + 2,
+                (int) ((initialCapacity - capacity) * coeff) + 1, 5);
     }
 
     public void reinit() {
         initialCapacity = capacity = (int) (50 + Math.random() * 50);
-        coeff = getMaxX() / initialCapacity;
+        coeff = (x + width) / initialCapacity;
     }
 
     /**
@@ -127,7 +121,7 @@ public class Plate extends Entity {
      * @return int сколько удалось лизнуть
      */
     int decreaseFood(int n) {
-        if (isEmpty())
+        if (isPlateEmpty())
             return 0; // тарелка пуста. в бесконечном цикле рискуем пролизать дырку
         if (n > capacity) {
             n = capacity; // удалось лизнуть меньше необходимого
@@ -135,10 +129,6 @@ public class Plate extends Entity {
         } else
             this.capacity -= n;
         return n;
-    }
-
-    public void info() {
-        System.out.println(this.getClass().getName() + ": " + capacity);
     }
 
     /**

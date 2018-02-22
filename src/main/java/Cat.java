@@ -20,26 +20,25 @@ public class Cat extends Entity {
     private int offsetFill; // смещение заполнения от начала прямоугольника
     private int heightFill; // высота заполнения
     private double coeff; // коэфициент для расчета прогрессбара
-    private int animationDuration = 50; // 1 секунда
 
     private final static String SPRITEFILENAME = "images/cat%d.png";
     private static ArrayList<Image> sprites = new ArrayList<>();
     private int frameCurrent = -1; // текущий фрейм
-    private long lastFrameTime; // время последней смены кадра
+    private long totalFrameTime; // время с последней смены кадра
     private long interFrametime = 100; // время между кадрами ms
+    private int animationDuration = 18; // аниамция идет с 9-го до 9-го кадра
 
     Cat(String name) {
         this.name = name;
 
-        if (sprites.size() == 0)
-            loadImages();
-
-        width = 70;
-        height = 70;
-
+        loadImages();
         if (sprites.size() > 0) {
+            frameCurrent = 7;
             width = sprites.get(0).getWidth(null);
             height = sprites.get(0).getHeight(null);
+        } else {
+            width = 70;
+            height = 70;
         }
 
         reinit();
@@ -70,6 +69,7 @@ public class Cat extends Entity {
 
     /**
      * кот голоден?
+     *
      * @return true голоден
      */
     boolean isHungry() {
@@ -79,38 +79,44 @@ public class Cat extends Entity {
     @Override
     public void update(long timeDelay) {
         // анимация
-        long currentTimeMillis = System.currentTimeMillis();
-        if (currentTimeMillis - lastFrameTime > interFrametime) {
-            if (frameCurrent >= 0) {
-                frameCurrent++;
-                if (frameCurrent >= sprites.size())
-                    frameCurrent = 0;
+        if (busy) {
+            totalFrameTime += timeDelay;
+            if (totalFrameTime >= interFrametime) {
+                totalFrameTime = 0;
+                if (frameCurrent >= 0) {
+                    frameCurrent++;
+                    if (frameCurrent >= sprites.size())
+                        frameCurrent = 0;
+                    // длительность анимации (кол-во кадров)
+                    animationDuration--;
+                    if (animationDuration <= 0 && frameCurrent == 7) {
+                        animationDuration = 18;
+                        busy = false;
+                    }
+                }
             }
-            lastFrameTime = currentTimeMillis;
         }
 
         // расчет высоты заполнения и смещения от начала (верхнего левого угла)
         heightFill = (int) ((initialHungry - hungry) * coeff);
         offsetFill = (int) (hungry * coeff);
-
-        // длительность анимации
-        animationDuration--;
-        if (animationDuration <= 0) {
-            animationDuration = 50;
-            busy = false;
-        }
     }
 
     @Override
     public void render(Graphics g) {
         if (frameCurrent >= 0 && frameCurrent < sprites.size())
-            g.drawImage(sprites.get(frameCurrent), (int) x + 11, (int) y, null);
+            g.drawImage(sprites.get(frameCurrent), (int) x + 15, (int) y, null);
+        else
+            System.out.println(this.name + ", frameCurrent=" + frameCurrent);
 
         // нарисуем состояние заполненности кота едой
         g.setColor(Color.blue);
-        g.fillRect((int) getX(), (int) getY() + offsetFill, 10, heightFill);
+        g.fillRect((int) x, (int) y + offsetFill, 10, heightFill);
         g.setColor(Color.white);
-        g.drawRect((int) getX(), (int) getY(), 10, (int) getHeight());
+        g.drawRect((int) x, (int) y, 10, (int) height);
+
+        // cat's name
+        g.drawString(name, (int) x + 30, (int) y + 10);
     }
 
     public boolean isBusy() {
@@ -136,7 +142,5 @@ public class Cat extends Entity {
             }
         } catch (IllegalArgumentException | IOException e) {
         }
-        if (sprites.size() > 0)
-            frameCurrent = 0;
     }
 }
