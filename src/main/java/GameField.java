@@ -24,11 +24,13 @@ public class GameField extends JPanel implements Runnable {
 
     private Cat catCurrent;
     private int catNum = -1;
+    boolean allCatsNotHungry = true; // признак, что все коты накормлены
 
     enum Stage {
         MOVE_PLATE,
         CAT_EATING,
         SELECT_NEXT_CAT,
+        PLATE_IS_EMPTY,
         IDLE
     }
 
@@ -44,27 +46,39 @@ public class GameField extends JPanel implements Runnable {
                 if (catCurrent == null)
                     stage = Stage.SELECT_NEXT_CAT;
                 else {
-                    if (!plate.isBusy() && !catCurrent.isBusy() && !plate.isPlateEmpty())
+                    if (!plate.isPlateEmpty())
                         stage = Stage.SELECT_NEXT_CAT;
                 }
                 break;
             case SELECT_NEXT_CAT:
-                catNum++;
-                if (catNum >= cats.length) catNum = 0;
-                catCurrent = cats[catNum];
-                // к нему поехала тарелочка
-                plate.moveTo((int) catCurrent.getX(), (int) catCurrent.getMaxY());
+                // выбор следующего голодного кота
+                catCurrent = getNextHungryCat();
+                if (catCurrent == null || plate.isPlateEmpty()) {
+                    // все коты накормлены, тарелку на базу. или тарелка пуста
+                    plate.moveTo(0, 150);
+                } else {
+                    // к нему поехала тарелочка
+                    plate.moveTo((int) catCurrent.getX(), (int) catCurrent.getMaxY());
+                }
                 stage = Stage.MOVE_PLATE;
                 break;
             case MOVE_PLATE:
-                System.out.println(plate);
                 if (!plate.isBusy()) {
-                    catCurrent.eat(plate);
-                    stage = Stage.CAT_EATING; // пока не доедет, не переключаем
+                    if (catCurrent == null) {
+                        stage = Stage.PLATE_IS_EMPTY; // тарелка приехала на базу
+                    }
+                    else {
+                        catCurrent.eat(plate);
+                        stage = Stage.CAT_EATING; // пока не доедет, не переключаем
+                    }
                 }
                 break;
             case CAT_EATING:
                 if (!catCurrent.isBusy())
+                    stage = Stage.IDLE;
+                break;
+            case PLATE_IS_EMPTY:
+                if (!plate.isPlateEmpty())
                     stage = Stage.IDLE;
                 break;
         }
@@ -73,12 +87,24 @@ public class GameField extends JPanel implements Runnable {
             entity.update(timeDelay);
     }
 
+    private Cat getNextHungryCat() {
+        Cat cat = null;
+        allCatsNotHungry = true;
+        for (int i = 0; i < cats.length; i++) {
+            catNum++;
+            if (catNum >= cats.length) catNum = 0;
+            cat = cats[catNum];
+            allCatsNotHungry &= !cat.isHungry();
+            if (!allCatsNotHungry) break; // найден голодный котик
+        }
+        return (allCatsNotHungry) ? null : cat;
+    }
+
     GameField() {
         setBackground(Color.BLACK);
         setPreferredSize(new Dimension(W_WIDTH, W_HEIGHT));
         setDoubleBuffered(true);
 
-//        loadImage();
         init();
         stage = Stage.IDLE;
     }
@@ -139,7 +165,6 @@ public class GameField extends JPanel implements Runnable {
         // инфа о тарелке
         plate.info();
         // кормим котов, пока тарелка не опустеет или все не накормятся
-        boolean allCatsNotHungry; // признак, что все коты накормлены
         while (true) {
             allCatsNotHungry = true;
             for (Cat cat : cats) {

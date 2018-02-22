@@ -13,6 +13,10 @@ public class Cat extends Entity {
     private int appetite; // сколько кот ест за раз. (2-5)
     private int hungry; // уровень голода кота. как только обнулится - кот не голоден (5-25)
     private boolean busy; // кот занят обычно анимацией
+    private int initialHungry; // начальная голодность кота. нужно для вычисления заполненности кота едой
+    private int offsetFill; // смещение заполнения от начала прямоугольника
+    private int heightFill; // высота заполнения
+
 
     Cat(String name) {
         this.name = name;
@@ -37,7 +41,7 @@ public class Cat extends Entity {
      */
     public void reinit() {
         appetite = (int) (2 + Math.random() * 3);
-        hungry = (int) (5 + Math.random() * 20);
+        initialHungry = hungry = (int) (5 + Math.random() * 20);
     }
 
     /**
@@ -50,13 +54,20 @@ public class Cat extends Entity {
 
     @Override
     public void update(long timeDelay) {
-
+        // расчет высоты заполнения и смещения от начала (верхнего левого угла)
+        double coeff = getHeight() / initialHungry;
+        heightFill = (int) ((initialHungry - hungry) * coeff);
+        offsetFill = (int) (hungry * coeff);
     }
 
     @Override
     public void render(Graphics g) {
-        g.setColor(Color.BLUE);
-        g.fillRect((int) getX(), (int) getY(), (int) getWidth(), (int) getHeight());
+        // нарисуем состояние заполненности кота едой
+        // смещение - hungry, вычислим высоту
+        g.setColor(Color.blue);
+        g.fillRect((int) getX(), (int) getY() + offsetFill, (int) getWidth(), heightFill);
+        g.setColor(Color.white);
+        g.drawRect((int) getX(), (int) getY(), (int) getWidth(), (int) getHeight());
     }
 
     public boolean isBusy() {

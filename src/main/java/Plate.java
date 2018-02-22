@@ -61,8 +61,8 @@ public class Plate extends Entity {
 
         if (dx == 0 && dy == 0) {
             // расчет направления движения и скорости
-            dx = (x < xDest) ? (xDest - x) : (x - xDest);
-            dy = (y > yDest) ? (yDest - y) : (y - yDest);
+            dx = xDest - x;
+            dy = yDest - y;
         }
 
         x += (dx * timeDelay) / 1000;
