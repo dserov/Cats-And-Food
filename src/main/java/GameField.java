@@ -1,7 +1,15 @@
+import com.sun.corba.se.spi.legacy.interceptor.ORBInitInfoExt;
+import sun.audio.AudioData;
+import sun.audio.AudioPlayer;
+import sun.audio.AudioStream;
+import sun.audio.ContinuousAudioDataStream;
+
+import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.*;
 
 /**
  * Cats And Food
@@ -35,7 +43,6 @@ public class GameField extends JPanel implements Runnable {
 
     // служит для пересчета состояния сущностей приложения
     private void update(long timeDelay) {
-        System.out.println("Current stage = " + stage);
         switch (stage) {
             case IDLE:
                 if (catCurrent == null && !plate.isPlateEmpty())
@@ -43,8 +50,10 @@ public class GameField extends JPanel implements Runnable {
                 else {
                     if (!plate.isPlateEmpty())
                         stage = Stage.SELECT_NEXT_CAT;
-                    else
-                       stage = Stage.PLATE_IS_EMPTY;
+                    else {
+                        plate.moveTo(300, 150);
+                        stage = Stage.MOVE_PLATE;
+                    }
                 }
                 break;
             case SELECT_NEXT_CAT:
@@ -61,12 +70,15 @@ public class GameField extends JPanel implements Runnable {
                 break;
             case MOVE_PLATE:
                 if (!plate.isBusy()) {
-                    if (catCurrent == null) {
-                        stage = Stage.PLATE_IS_EMPTY; // тарелка приехала на базу
-                    }
-                    else {
-                        catCurrent.eat(plate);
-                        stage = Stage.CAT_EATING; // кот кушает
+                    if (plate.isPlateEmpty()) {
+                        stage = Stage.PLATE_IS_EMPTY;
+                    } else {
+                        if (catCurrent == null) {
+                            stage = Stage.PLATE_IS_EMPTY; // тарелка приехала на базу
+                        } else {
+                            catCurrent.eat(plate);
+                            stage = Stage.CAT_EATING; // кот кушает
+                        }
                     }
                 }
                 break;
@@ -158,6 +170,8 @@ public class GameField extends JPanel implements Runnable {
     // тело потока
     @Override
     public void run() {
+        music();
+
         long lastFrameTime = System.currentTimeMillis(), sleepTime, fps = 0, frameTime = 0;
 
         Thread thisThread = Thread.currentThread();
@@ -199,6 +213,38 @@ public class GameField extends JPanel implements Runnable {
             Cat cat = new Cat("Cat-" + i);
             cat.setLocation(10, (cat.getHeight() + 20) * i + 20);
             cats[i] = cat;
+        }
+    }
+
+    // background music
+    private void music() {
+        String filename = "mario.wav";
+        ContinuousAudioDataStream loop = null;
+        InputStream in = null;
+        AudioFileFormat audioFileFormat = null;
+        AudioInputStream audioInputStream = null;
+        try {
+            in = getClass().getClassLoader().getResourceAsStream(filename);
+            audioFileFormat = AudioSystem.getAudioFileFormat(in);
+            AudioFormat audioFormat = audioFileFormat.getFormat();
+            audioInputStream = new AudioInputStream(in, audioFormat, audioFileFormat.getByteLength());
+        } catch (IllegalArgumentException e) {
+            System.out.println("File not found");
+        } catch (UnsupportedAudioFileException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            Clip clip;
+            clip = AudioSystem.getClip();
+            clip.open(audioInputStream);
+            clip.setLoopPoints(0, -1);
+            clip.loop(Clip.LOOP_CONTINUOUSLY);
+        } catch (LineUnavailableException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
