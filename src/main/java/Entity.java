@@ -37,4 +37,11 @@ public abstract class Entity {
     public double getCenterY() {
         return (y + height) / 2.0;
     }
+
+    // попадают ли координаты в этот объект
+    public boolean contain(int x, int y) {
+        return (x >= this.x && x <= (this.x + width) &&
+                y >= this.y && y <= (this.y + height) );
+    }
+
 }

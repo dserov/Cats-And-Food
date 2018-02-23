@@ -3,7 +3,6 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 
-
 /**
  * Plate
  *
@@ -30,6 +29,8 @@ public class Plate extends Entity {
     private long lastFrameTime; // время последней смены кадра
     private long interFrametime = 100; // время между кадрами ms
 
+    private boolean showBorder = false;
+
     // установка цели для тарелки
     public void moveTo(int xDest, int yDest) {
         this.xDest = xDest;
@@ -52,7 +53,7 @@ public class Plate extends Entity {
             height = 30;
         }
 
-        reinit();
+        setCapacity(0);
     }
 
     @Override
@@ -97,21 +98,31 @@ public class Plate extends Entity {
         y += (dy * timeDelay) / 1000;
     }
 
+    public void setShowBorder(boolean showBorder) {
+        this.showBorder = showBorder;
+    }
+
     @Override
     public void render(Graphics g) {
         if (frameCurrent >= 0 && frameCurrent < sprites.size())
             g.drawImage(sprites.get(frameCurrent), (int) x, (int) y, null);
 
-//         прогрессбар
-        g.fillRect((int) x, (int) (y + height) + 2, (int) width, 5);
-        g.setColor(Color.PINK);
-        g.fillRect((int) (x + capacity * coeff), (int) (y + height) + 2,
-                (int) ((initialCapacity - capacity) * coeff) + 1, 5);
-    }
+        // прогрессбар
+        g.setColor(Color.blue);
+        g.fillRect((int) x, (int) (y + height) + 2, (int) (capacity * coeff), 5);
+        g.setColor(Color.white);
+        g.drawRect((int) x , (int) (y + height) + 2, (int) (width), 5);
 
-    public void reinit() {
-        initialCapacity = capacity = (int) (50 + Math.random() * 50);
-        coeff = (x + width) / initialCapacity;
+        if (showBorder) {
+            g.setColor(Color.white);
+            g.drawRoundRect((int) x - 5, (int) y - 5, (int) (width + 10), (int) (height + 15), 5, 5);
+        }
+
+        // пустая тарелка. покажем сообщение
+        if (capacity == 0) {
+            // пусть плавает, привлекает внимание
+            g.drawString("Click me ->", (int) x + 50 + frameCurrent, (int) y + 15);
+        }
     }
 
     /**
@@ -138,6 +149,11 @@ public class Plate extends Entity {
      */
     public void setCapacity(int capacity) {
         this.capacity = capacity;
+        initialCapacity = capacity;
+        if (initialCapacity == 0)
+            coeff = width;
+        else
+            coeff = width / initialCapacity;
     }
 
     /**
@@ -178,4 +194,6 @@ public class Plate extends Entity {
         if (sprites.size() > 0)
             frameCurrent = 0;
     }
+
+
 }

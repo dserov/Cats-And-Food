@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * Cats And Food
@@ -9,11 +11,10 @@ import java.awt.*;
  * @link https://github.com/dserov/CatsAndFood
  */
 public class GameField extends JPanel implements Runnable {
-    private final int W_HEIGHT = 550;
+    private final int W_HEIGHT = 520;
     private final int W_WIDTH = 600;
     private final long DELAY = 20; // умолчательное значение задержки следующего рабочего цикла
     private Thread runner;
-//    private List<Entity> entities = new ArrayList<>();
 
     final private int CATS_COUNT = 3;
     private Cat[] cats = new Cat[CATS_COUNT];
@@ -21,7 +22,6 @@ public class GameField extends JPanel implements Runnable {
 
     private Cat catCurrent;
     private int catNum = -1;
-    private boolean allCatsNotHungry = true; // признак, что все коты накормлены
 
     enum Stage {
         MOVE_PLATE,
@@ -35,16 +35,16 @@ public class GameField extends JPanel implements Runnable {
 
     // служит для пересчета состояния сущностей приложения
     private void update(long timeDelay) {
-        //System.out.println("Current stage = " + stage);
-        // select new stage
-
+        System.out.println("Current stage = " + stage);
         switch (stage) {
             case IDLE:
-                if (catCurrent == null)
+                if (catCurrent == null && !plate.isPlateEmpty())
                     stage = Stage.SELECT_NEXT_CAT;
                 else {
                     if (!plate.isPlateEmpty())
                         stage = Stage.SELECT_NEXT_CAT;
+                    else
+                       stage = Stage.PLATE_IS_EMPTY;
                 }
                 break;
             case SELECT_NEXT_CAT:
@@ -66,7 +66,7 @@ public class GameField extends JPanel implements Runnable {
                     }
                     else {
                         catCurrent.eat(plate);
-                        stage = Stage.CAT_EATING; // пока не доедет, не переключаем
+                        stage = Stage.CAT_EATING; // кот кушает
                     }
                 }
                 break;
@@ -88,25 +88,51 @@ public class GameField extends JPanel implements Runnable {
 
     private Cat getNextHungryCat() {
         Cat cat = null;
-        allCatsNotHungry = true;
+        boolean allCatsNotHungry = true;
         for (int i = 0; i < cats.length; i++) {
             catNum++;
             if (catNum >= cats.length) catNum = 0;
             cat = cats[catNum];
-            allCatsNotHungry &= !cat.isHungry();
+            allCatsNotHungry = allCatsNotHungry && !cat.isHungry();
             if (!allCatsNotHungry) break; // найден голодный котик
         }
         return (allCatsNotHungry) ? null : cat;
     }
 
     GameField() {
-        setBackground(Color.BLACK);
+        setBackground(Color.darkGray);
         setPreferredSize(new Dimension(W_WIDTH, W_HEIGHT));
         setDoubleBuffered(true);
 
         init();
         stage = Stage.IDLE;
-//        stage = Stage.TEST_STAGE;
+
+        // реакция на клики мышью
+        this.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                int x = e.getX();
+                int y = e.getY();
+                // попали ли по тарелке?
+                if (plate.contain(x, y)) {
+                    // пополнить можно только пустую тарелку
+                    if (plate.isPlateEmpty()) {
+                        int rndCapacity = (int) (15 + Math.random() * 15);
+                        plate.setCapacity(rndCapacity);
+                    }
+                }
+            }
+        });
+
+        // пусть при наведении на тарелку рисуется рамка. прикольно же
+        this.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                int x = e.getX();
+                int y = e.getY();
+                plate.setShowBorder(plate.contain(x, y));
+            }
+        });
     }
 
     // вызывается при добавлении панельки к фрейму
@@ -128,7 +154,6 @@ public class GameField extends JPanel implements Runnable {
         for (Entity entity : cats)
             entity.render(g);
     }
-
 
     // тело потока
     @Override
@@ -168,13 +193,11 @@ public class GameField extends JPanel implements Runnable {
         // создаем тарелку
         plate = new Plate();
         plate.setLocation(300, 150);
-//        entities.add(plate);
 
         // Создаем котов с разным аппетитом от 5 до 25
         for (int i = 0; i < CATS_COUNT; i++) {
-            Cat cat = new Cat("Kot-" + i);
+            Cat cat = new Cat("Cat-" + i);
             cat.setLocation(10, (cat.getHeight() + 20) * i + 20);
-//            entities.add(cat);
             cats[i] = cat;
         }
     }

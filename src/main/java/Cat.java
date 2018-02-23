@@ -17,8 +17,6 @@ public class Cat extends Entity {
     private int hungry; // уровень голода кота. как только обнулится - кот не голоден (5-25)
     private boolean busy; // кот занят обычно анимацией
     private int initialHungry; // начальная голодность кота. нужно для вычисления заполненности кота едой
-    private int offsetFill; // смещение заполнения от начала прямоугольника
-    private int heightFill; // высота заполнения
     private double coeff; // коэфициент для расчета прогрессбара
 
     private final static String SPRITEFILENAME = "images/cat%d.png";
@@ -97,9 +95,6 @@ public class Cat extends Entity {
             }
         }
 
-        // расчет высоты заполнения и смещения от начала (верхнего левого угла)
-        heightFill = (int) ((initialHungry - hungry) * coeff);
-        offsetFill = (int) (hungry * coeff);
     }
 
     @Override
@@ -110,6 +105,9 @@ public class Cat extends Entity {
             System.out.println(this.name + ", frameCurrent=" + frameCurrent);
 
         // нарисуем состояние заполненности кота едой
+        // расчет высоты заполнения и смещения от начала (верхнего левого угла)
+        int heightFill = (int) ((initialHungry - hungry) * coeff);
+        int offsetFill = (int) (hungry * coeff);
         g.setColor(Color.blue);
         g.fillRect((int) x, (int) y + offsetFill, 10, heightFill);
         g.setColor(Color.white);
