@@ -1,8 +1,5 @@
 import com.sun.corba.se.spi.legacy.interceptor.ORBInitInfoExt;
-import sun.audio.AudioData;
-import sun.audio.AudioPlayer;
-import sun.audio.AudioStream;
-import sun.audio.ContinuousAudioDataStream;
+import sun.audio.*;
 
 import javax.sound.sampled.*;
 import javax.swing.*;
@@ -219,15 +216,11 @@ public class GameField extends JPanel implements Runnable {
     // background music
     private void music() {
         String filename = "mario.wav";
-        ContinuousAudioDataStream loop = null;
-        InputStream in = null;
-        AudioFileFormat audioFileFormat = null;
+        InputStream in;
         AudioInputStream audioInputStream = null;
         try {
             in = getClass().getClassLoader().getResourceAsStream(filename);
-            audioFileFormat = AudioSystem.getAudioFileFormat(in);
-            AudioFormat audioFormat = audioFileFormat.getFormat();
-            audioInputStream = new AudioInputStream(in, audioFormat, audioFileFormat.getByteLength());
+            audioInputStream = AudioSystem.getAudioInputStream(new BufferedInputStream(in));
         } catch (IllegalArgumentException e) {
             System.out.println("File not found");
         } catch (UnsupportedAudioFileException e) {
